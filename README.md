@@ -8,8 +8,8 @@ go install github.com/jreisinger/ghrel@latest
 
 or download a [release](https://github.com/jreisinger/ghrel/releases) binary (from under "Assets") for your system and architecture.
 
-Usage:
+Sample usage:
 
 ```
-ghrel jreisinger/ghrel
+ghrel jreisinger/checkip
 ```
