@@ -1,7 +1,15 @@
-ghrel downloads assets of the latest release from GitHub.
+`ghrel` concurrently downloads assets of the latest release from a GitHub repo.
+
+Installation:
 
 ```
-go test
-go install
-ghrel jreisinger/checkip
+go install github.com/jreisinger/ghrel@latest
+```
+
+or download a [release](https://github.com/jreisinger/ghrel/releases) binary (from under "Assets") for your system and architecture.
+
+Usage:
+
+```
+ghrel jreisinger/ghrel
 ```
