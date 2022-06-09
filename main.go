@@ -21,7 +21,7 @@ func main() {
 	}
 	repo := os.Args[1]
 
-	urls, err := getUrls(repo)
+	urls, err := getDownloadUrls(repo)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,17 +72,20 @@ func fileName(URL string) (string, error) {
 	return file, nil
 }
 
-// getUrls returns URLs for downloading assets from the latest repo release.
-func getUrls(repo string) ([]string, error) {
-	api_url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", repo)
-	resp, err := http.Get(api_url)
+var api_url = "https://api.github.com"
+
+// getDownloadUrls returns URLs for downloading assets from the latest repo release.
+func getDownloadUrls(repo string) ([]string, error) {
+	url := api_url + "/repos/" + repo + "/releases/latest"
+
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("getting %s: %s", api_url, resp.Status)
+		return nil, fmt.Errorf("getting %s: %s", url, resp.Status)
 	}
 
 	b, err := io.ReadAll(resp.Body)
