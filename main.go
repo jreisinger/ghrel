@@ -31,6 +31,8 @@ func main() {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
+			file, _ := fileName(url)
+			log.Printf("downloading %s", file)
 			if err := download(url); err != nil {
 				log.Print(err)
 			}
