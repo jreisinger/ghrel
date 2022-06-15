@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"sync"
+
+	"github.com/jreisinger/ghrel/assets"
 )
 
 func main() {
@@ -16,9 +18,9 @@ func main() {
 	}
 	repo := os.Args[1]
 
-	urls, err := getDownloadUrls(repo)
+	urls, err := assets.GetDownloadUrls(repo)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("get donwload URLs for release assets: %v", err)
 	}
 
 	var checksumFiles []string
@@ -30,11 +32,18 @@ func main() {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
-			file, _ := fileName(url)
-			if err := download(url); err != nil {
+
+			file, err := fileName(url)
+			if err != nil {
+				log.Printf("extract filename from URL: %v", err)
+				return
+			}
+
+			if err := download(url, file); err != nil {
 				log.Print(err)
 				return
 			}
+
 			if isChecksumsFile(file) {
 				checksumFiles = append(checksumFiles, file)
 			}
