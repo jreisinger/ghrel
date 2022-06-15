@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
+	"regexp"
 	"sync"
 )
 
@@ -26,19 +28,48 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var checksumFiles []string
+	var infoFmt = "%-30s"
+
+	fmt.Printf(infoFmt, "downloading release files ")
 	var wg sync.WaitGroup
 	for _, url := range urls {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
 			file, _ := fileName(url)
-			log.Printf("downloading %s", file)
 			if err := download(url); err != nil {
 				log.Print(err)
+				return
+			}
+			if isChecksumsFile(file) {
+				checksumFiles = append(checksumFiles, file)
 			}
 		}(url)
 	}
 	wg.Wait()
+	fmt.Printf("OK\n")
+
+	fmt.Printf(infoFmt, "verifying checksums ")
+	for _, c := range checksumFiles {
+		if err := verifyChecksums(c); err != nil {
+			log.Fatal(err)
+		}
+	}
+	fmt.Printf("OK\n")
+}
+
+func verifyChecksums(checksumsFile string) error {
+	cmd := exec.Command("sha256sum", "-c", checksumsFile)
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+var checksumsFile = regexp.MustCompile(`(?i)checksum`)
+
+func isChecksumsFile(filename string) bool {
+	return checksumsFile.MatchString(filename)
 }
 
 // download downloads file from the url.

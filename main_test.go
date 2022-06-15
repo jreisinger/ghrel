@@ -11,6 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestVerifyChecksums(t *testing.T) {
+	if err := verifyChecksums("testdata/checksum-ok.txt"); err != nil {
+		t.Errorf("verifyChecksums: %v, want nil", err)
+	}
+	if err := verifyChecksums("testdata/checksum-notok.txt"); err == nil {
+		t.Errorf("verifyChecksums: %v, want error", err)
+	}
+}
+
 func TestFilename(t *testing.T) {
 	tests := []struct {
 		url  string
