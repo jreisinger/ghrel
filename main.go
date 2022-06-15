@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,9 +11,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"regexp"
+	"strings"
 	"sync"
 )
 
@@ -52,18 +55,88 @@ func main() {
 
 	fmt.Printf(infoFmt, "verifying checksums ")
 	for _, c := range checksumFiles {
-		if err := verifyChecksums(c); err != nil {
+		ok, err := verifyChecksums(c)
+		if err != nil {
 			log.Fatal(err)
+		}
+		if !ok {
+			fmt.Printf("NOT OK\n")
+			return
 		}
 	}
 	fmt.Printf("OK\n")
 }
 
-func verifyChecksums(checksumsFile string) error {
-	cmd := exec.Command("sha256sum", "-c", checksumsFile)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
-	return cmd.Run()
+func verifyChecksums(checksumsFile string) (ok bool, err error) {
+	// cmd := exec.Command("sha256sum", "-c", checksumsFile)
+	// return cmd.Run()
+
+	checksums, err := extractChecksums(checksumsFile)
+	if err != nil {
+		return false, err
+	}
+
+	for _, c := range checksums {
+		ok, err := verifyFileChecksum(c)
+		if err != nil {
+			return false, err
+		}
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+type checksum struct {
+	checksum []byte // in hex
+	filename string
+}
+
+func extractChecksums(checksumsFile string) ([]checksum, error) {
+	file, err := os.Open(checksumsFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	b, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var checksums []checksum
+
+	for _, line := range strings.Split(string(b), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			continue
+		}
+		c, err := hex.DecodeString(fields[0])
+		if err != nil {
+			return nil, err
+		}
+		checksums = append(checksums, checksum{c, fields[1]})
+	}
+
+	return checksums, nil
+}
+
+func verifyFileChecksum(c checksum) (ok bool, err error) {
+	file, err := os.Open(c.filename)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return false, err
+	}
+	sum := hash.Sum(nil)
+
+	return bytes.Equal(c.checksum, sum), nil
 }
 
 var checksumsFile = regexp.MustCompile(`(?i)check.?sum`)
