@@ -66,7 +66,7 @@ func verifyChecksums(checksumsFile string) error {
 	return cmd.Run()
 }
 
-var checksumsFile = regexp.MustCompile(`(?i)checksum`)
+var checksumsFile = regexp.MustCompile(`(?i)check.?sum`)
 
 func isChecksumsFile(filename string) bool {
 	return checksumsFile.MatchString(filename)
