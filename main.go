@@ -17,7 +17,7 @@ func main() {
 	log.SetPrefix(os.Args[0] + ": ")
 
 	if len(os.Args[1:]) != 1 {
-		log.Fatal("supply github <owner>/<repo> to download latest release assets from")
+		log.Fatal("supply github <owner>/<repo>")
 	}
 	repo := os.Args[1]
 
