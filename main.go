@@ -67,6 +67,8 @@ func main() {
 	fmt.Printf("OK\n")
 }
 
+// verifyChecksums reads checksums from checksumsFile and check them. It
+// implements "sha256sum -c" functionality.
 func verifyChecksums(checksumsFile string) (ok bool, err error) {
 	// cmd := exec.Command("sha256sum", "-c", checksumsFile)
 	// return cmd.Run()
@@ -89,11 +91,13 @@ func verifyChecksums(checksumsFile string) (ok bool, err error) {
 	return true, nil
 }
 
+// checksum represents a file from a checksums file.
 type checksum struct {
 	checksum []byte // in hex
 	filename string
 }
 
+// extractChecksums parses a checksumsFile and extracts checksums from it.
 func extractChecksums(checksumsFile string) ([]checksum, error) {
 	file, err := os.Open(checksumsFile)
 	if err != nil {
@@ -123,6 +127,8 @@ func extractChecksums(checksumsFile string) ([]checksum, error) {
 	return checksums, nil
 }
 
+// verifyFileChecksum computes SHA256 checksum of the file from c and compares
+// it to the checksum from c.
 func verifyFileChecksum(c checksum) (ok bool, err error) {
 	file, err := os.Open(c.filename)
 	if err != nil {
