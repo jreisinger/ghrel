@@ -1,4 +1,4 @@
-`ghrel` concurrently downloads assets of the latest release from a GitHub repo.
+`ghrel` concurrently downloads and verifies assets of the latest release from a GitHub repository.
 
 ```
 $ ghrel jreisinger/ghrel
@@ -6,4 +6,4 @@ downloading release files     OK
 verifying checksums           OK
 ```
 
-To use it download a [release](https://github.com/jreisinger/ghrel/releases) binary (from under "Assets") for your system and architecture or `go install github.com/jreisinger/ghrel@latest`.
+To use ghrel download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or `go install github.com/jreisinger/ghrel@latest`.
