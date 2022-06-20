@@ -6,4 +6,4 @@ downloading release files     OK
 verifying checksums           OK
 ```
 
-To use ghrel download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or `go install github.com/jreisinger/ghrel@latest`.
+To use ghrel, download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or `go install github.com/jreisinger/ghrel@latest`.
