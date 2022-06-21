@@ -24,6 +24,10 @@ func main() {
 	}
 
 	var checksumFiles []string
+	var count struct {
+		mu    sync.Mutex
+		files int
+	}
 	var infoFmt = "%-30s"
 
 	fmt.Printf(infoFmt, "downloading release files ")
@@ -40,9 +44,13 @@ func main() {
 			}
 
 			if err := download(url, file); err != nil {
-				log.Print(err)
+				log.Printf("download %s: %v", url, err)
 				return
 			}
+
+			count.mu.Lock()
+			count.files++
+			count.mu.Unlock()
 
 			if isChecksumsFile(file) {
 				checksumFiles = append(checksumFiles, file)
@@ -50,18 +58,17 @@ func main() {
 		}(url)
 	}
 	wg.Wait()
-	fmt.Printf("OK\n")
+	fmt.Printf("OK (%d)\n", count.files)
 
 	fmt.Printf(infoFmt, "verifying checksums ")
+	var verifiedFiles int
 	for _, c := range checksumFiles {
-		ok, err := verifyChecksums(c)
+		n, err := verifyChecksums(c)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("%s: %v", c, err)
+			continue
 		}
-		if !ok {
-			fmt.Printf("NOT OK\n")
-			return
-		}
+		verifiedFiles += n
 	}
-	fmt.Printf("OK\n")
+	fmt.Printf("OK (%d)\n", verifiedFiles)
 }

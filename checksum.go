@@ -4,34 +4,37 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 )
 
-// verifyChecksums reads checksums from checksumsFile and check them. It
+// verifyChecksums reads checksums from checksumsFile and checks them. It
 // implements "sha256sum -c" functionality.
-func verifyChecksums(checksumsFile string) (ok bool, err error) {
+func verifyChecksums(checksumsFile string) (okfiles int, err error) {
 	// cmd := exec.Command("sha256sum", "-c", checksumsFile)
 	// return cmd.Run()
 
 	checksums, err := extractChecksums(checksumsFile)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	for _, c := range checksums {
 		ok, err := verifyFileChecksum(c)
 		if err != nil {
-			return false, err
+			return okfiles, err
 		}
 		if !ok {
-			return false, nil
+			return okfiles, fmt.Errorf(
+				"%s from %s is not ok", c.filename, checksumsFile)
 		}
+		okfiles++
 	}
 
-	return true, nil
+	return okfiles, nil
 }
 
 // checksum represents a line from a checksums file.
