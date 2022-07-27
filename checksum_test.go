@@ -20,18 +20,18 @@ func TestVerifyFileChecksum(t *testing.T) {
 }
 
 func TestVerifyChecksums(t *testing.T) {
-	ok, err := verifyChecksums("testdata/checksum-ok.txt")
+	okfiles, err := verifyChecksums("testdata/checksum-ok.txt")
 	if err != nil {
 		t.Errorf("verifyChecksums: %v, want nil", err)
 	}
-	if !ok {
-		t.Errorf("verifyChecksums: %v, want true", ok)
+	if okfiles != 1 {
+		t.Errorf("verifyChecksums: %v, want %v", okfiles, 1)
 	}
-	ok, err = verifyChecksums("testdata/checksum-notok.txt")
-	if err != nil {
-		t.Errorf("verifyChecksums: %v, want nil", err)
+	okfiles, err = verifyChecksums("testdata/checksum-notok.txt")
+	if err == nil {
+		t.Errorf("verifyChecksums: %v, want error", err)
 	}
-	if ok {
-		t.Errorf("verifyChecksums: %v, want false", ok)
+	if okfiles != 0 {
+		t.Errorf("verifyChecksums: %v, want %v", okfiles, 0)
 	}
 }

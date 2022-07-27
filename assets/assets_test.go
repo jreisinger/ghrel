@@ -28,7 +28,7 @@ func TestGetDownloadUrls(t *testing.T) {
 // startMockApiServer returns URL of an HTTP server that mocks GitHub API.
 // Getting that URL you will return testdata/gh_api_response.json.
 func startMockApiServer(t *testing.T) string {
-	b, err := ioutil.ReadFile(filepath.Join("testdata", "gh_api_response.json"))
+	b, err := ioutil.ReadFile(filepath.Join("..", "testdata", "gh_api_response.json"))
 	require.NoError(t, err)
 
 	handlerFn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
