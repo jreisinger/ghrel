@@ -1,6 +1,8 @@
+# ghrel
+
 `ghrel` concurrently downloads and verifies assets of the latest release from a GitHub repository.
 
-```
+```bash
 $ ghrel jreisinger/ghrel
 downloading release files     OK (6)
 verifying checksums           OK (5)
