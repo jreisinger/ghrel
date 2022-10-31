@@ -1,22 +1,28 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/jreisinger/ghrel/assets"
 )
 
+var shellPattern = flag.String("p", "", "donwload only files matching shell `pattern`")
+
 func main() {
 	log.SetFlags(0) // no timestamp
 	log.SetPrefix(os.Args[0] + ": ")
 
-	if len(os.Args[1:]) != 1 {
+	flag.Parse()
+
+	if len(flag.Args()) != 1 {
 		log.Fatal("supply github <owner>/<repo>")
 	}
-	repo := os.Args[1]
+	repo := flag.Args()[0]
 
 	urls, err := assets.GetDownloadUrls(repo)
 	if err != nil {
@@ -43,6 +49,18 @@ func main() {
 				return
 			}
 
+			if isChecksumsFile(file) {
+				checksumFiles = append(checksumFiles, file)
+			} else if *shellPattern != "" {
+				matched, err := filepath.Match(*shellPattern, file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if !matched {
+					return
+				}
+			}
+
 			if err := download(url, file); err != nil {
 				log.Printf("download %s: %v", url, err)
 				return
@@ -51,10 +69,6 @@ func main() {
 			count.mu.Lock()
 			count.files++
 			count.mu.Unlock()
-
-			if isChecksumsFile(file) {
-				checksumFiles = append(checksumFiles, file)
-			}
 		}(url)
 	}
 	wg.Wait()

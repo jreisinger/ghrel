@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -23,6 +24,12 @@ func verifyChecksums(checksumsFile string) (okfiles int, err error) {
 	}
 
 	for _, c := range checksums {
+		if *shellPattern != "" {
+			if matched, _ := filepath.Match(*shellPattern, c.filename); !matched {
+				continue
+			}
+		}
+
 		ok, err := verifyFileChecksum(c)
 		if err != nil {
 			return okfiles, err
