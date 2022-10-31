@@ -34,9 +34,7 @@ func main() {
 		mu    sync.Mutex
 		files int
 	}
-	var infoFmt = "%-30s"
 
-	fmt.Printf(infoFmt, "downloading release files ")
 	var wg sync.WaitGroup
 	for _, url := range urls {
 		wg.Add(1)
@@ -72,9 +70,8 @@ func main() {
 		}(url)
 	}
 	wg.Wait()
-	fmt.Printf("OK (%d)\n", count.files)
+	fmt.Printf("downloaded %d file(s)\n", count.files)
 
-	fmt.Printf(infoFmt, "verifying checksums ")
 	var verifiedFiles int
 	for _, c := range checksumFiles {
 		n, err := verifyChecksums(c)
@@ -84,5 +81,5 @@ func main() {
 		}
 		verifiedFiles += n
 	}
-	fmt.Printf("OK (%d)\n", verifiedFiles)
+	fmt.Printf("verified %d file(s)\n", verifiedFiles)
 }
