@@ -20,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
-		log.Fatal("supply github <owner>/<repo>")
+		log.Fatalf("usage: %s [flags] <owner>/<repo>", os.Args[0])
 	}
 	repo := flag.Args()[0]
 
