@@ -98,9 +98,29 @@ func verifyFileChecksum(c checksum) (ok bool, err error) {
 	return bytes.Equal(c.checksum, sum), nil
 }
 
-var checksumsFile = regexp.MustCompile(`(?i)check.?sum`)
+type checksumFilePattern struct {
+	pattern    string
+	singleFile bool // checksum file holds checksum only for single file
+}
+
+var checksumFilePatterns = []checksumFilePattern{
+	// ghrel_0.3.1_checksums.txt
+	{`(?i)check.?sum`, false},
+	// brave-browser-nightly-1.47.27-linux-amd64.zip.sha256
+	{`\.sha256$`, true},
+}
 
 // isChecksumsFile tells whether filename looks like a file containing checksums.
 func isChecksumsFile(filename string) bool {
-	return checksumsFile.MatchString(filename)
+	for _, c := range checksumFilePatterns {
+		if c.singleFile && *shellPattern != "" {
+			if matched, _ := filepath.Match(*shellPattern, filename); !matched {
+				continue
+			}
+		}
+		if regexp.MustCompile(c.pattern).MatchString(filename) {
+			return true
+		}
+	}
+	return false
 }
