@@ -13,3 +13,4 @@ verified 1 file(s)
 ```
 
 To use ghrel, download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or `go install github.com/jreisinger/ghrel@latest`.
+
