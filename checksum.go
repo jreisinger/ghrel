@@ -35,8 +35,7 @@ func verifyChecksums(checksumsFile string) (okfiles int, err error) {
 			return okfiles, err
 		}
 		if !ok {
-			return okfiles, fmt.Errorf(
-				"%s from %s is not ok", c.filename, checksumsFile)
+			return okfiles, fmt.Errorf("%s is not ok", c.filename)
 		}
 		okfiles++
 	}

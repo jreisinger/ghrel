@@ -84,8 +84,7 @@ func main() {
 		for _, c := range checksumFiles {
 			n, err := verifyChecksums(c)
 			if err != nil {
-				log.Printf("%s: %v", c, err)
-				continue
+				log.Fatalf("%s: %v", c, err)
 			}
 			verifiedFiles += n
 		}
