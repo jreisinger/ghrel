@@ -5,8 +5,8 @@
 ```sh
 # donwload all
 ❯ ghrel jreisinger/ghrel
-downloaded 6 file(s)
-verified 5 file(s)
+downloaded 11 file(s)
+verified 10 file(s)
 
 # donwload those matching shell pattern
 ❯ ghrel -p '*linux*amd64*' brave/brave-browser
@@ -20,4 +20,3 @@ brave-browser-1.45.116-linux-amd64.zip.sha256
 ```
 
 To use ghrel, download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or `go install github.com/jreisinger/ghrel@latest`.
-
