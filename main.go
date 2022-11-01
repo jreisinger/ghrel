@@ -12,6 +12,7 @@ import (
 )
 
 var shellPattern = flag.String("p", "", "donwload only files matching shell `pattern`")
+var onlyList = flag.Bool("l", false, "only list files that would be downloaded")
 
 func main() {
 	log.SetFlags(0) // no timestamp
@@ -59,6 +60,11 @@ func main() {
 				}
 			}
 
+			if *onlyList {
+				fmt.Println(file)
+				return
+			}
+
 			if err := download(url, file); err != nil {
 				log.Printf("download %s: %v", url, err)
 				return
@@ -70,16 +76,19 @@ func main() {
 		}(url)
 	}
 	wg.Wait()
-	fmt.Printf("downloaded %d file(s)\n", count.files)
 
-	var verifiedFiles int
-	for _, c := range checksumFiles {
-		n, err := verifyChecksums(c)
-		if err != nil {
-			log.Printf("%s: %v", c, err)
-			continue
+	if !*onlyList {
+		fmt.Printf("downloaded %d file(s)\n", count.files)
+
+		var verifiedFiles int
+		for _, c := range checksumFiles {
+			n, err := verifyChecksums(c)
+			if err != nil {
+				log.Printf("%s: %v", c, err)
+				continue
+			}
+			verifiedFiles += n
 		}
-		verifiedFiles += n
+		fmt.Printf("verified %d file(s)\n", verifiedFiles)
 	}
-	fmt.Printf("verified %d file(s)\n", verifiedFiles)
 }
