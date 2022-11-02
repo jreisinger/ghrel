@@ -10,7 +10,7 @@ func TestVerifyFileChecksum(t *testing.T) {
 	if err != nil {
 		t.Errorf("decode hex string: %v", err)
 	}
-	ok, err := verifyFileChecksum(checksum{cs, "testdata/file-to-checksum"})
+	ok, err := verifyFileChecksum(checksum{cs, "testdata/file-to-checksum", false})
 	if err != nil {
 		t.Errorf("verifyFileChecksum: %v, want nil", err)
 	}
@@ -20,18 +20,19 @@ func TestVerifyFileChecksum(t *testing.T) {
 }
 
 func TestVerifyChecksums(t *testing.T) {
-	okfiles, err := verifyChecksums("testdata/checksum-ok.txt")
+	checksums, err := verifyChecksums("testdata/checksum-ok.txt")
 	if err != nil {
 		t.Errorf("verifyChecksums: %v, want nil", err)
 	}
-	if okfiles != 1 {
-		t.Errorf("verifyChecksums: %v, want %v", okfiles, 1)
+	if !checksums[0].verified {
+		t.Error("testdata/checksum-ok.txt not verified")
 	}
-	okfiles, err = verifyChecksums("testdata/checksum-notok.txt")
-	if err == nil {
-		t.Errorf("verifyChecksums: %v, want error", err)
+
+	checksums, err = verifyChecksums("testdata/checksum-notok.txt")
+	if err != nil {
+		t.Errorf("verifyChecksums: %v, want nil", err)
 	}
-	if okfiles != 0 {
-		t.Errorf("verifyChecksums: %v, want %v", okfiles, 0)
+	if checksums[0].verified {
+		t.Error("testdata/checksum-notok.txt verified")
 	}
 }

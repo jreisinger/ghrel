@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,39 +13,38 @@ import (
 
 // verifyChecksums reads checksums from checksumsFile and checks them. It
 // implements "sha256sum -c" functionality.
-func verifyChecksums(checksumsFile string) (okfiles int, err error) {
+func verifyChecksums(checksumsFile string) (checksums []checksum, err error) {
 	// cmd := exec.Command("sha256sum", "-c", checksumsFile)
 	// return cmd.Run()
 
-	checksums, err := extractChecksums(checksumsFile)
+	cs, err := extractChecksums(checksumsFile)
 	if err != nil {
-		return 0, err
+		return checksums, err
 	}
 
-	for _, c := range checksums {
+	for i := range cs {
 		if *shellPattern != "" {
-			if matched, _ := filepath.Match(*shellPattern, c.filename); !matched {
+			if matched, _ := filepath.Match(*shellPattern, cs[i].filename); !matched {
 				continue
 			}
 		}
 
-		ok, err := verifyFileChecksum(c)
+		ok, err := verifyFileChecksum(cs[i])
 		if err != nil {
-			return okfiles, err
+			return checksums, err
 		}
-		if !ok {
-			return okfiles, fmt.Errorf("%s is not ok", c.filename)
-		}
-		okfiles++
+		cs[i].verified = ok
+		checksums = append(checksums, cs[i])
 	}
 
-	return okfiles, nil
+	return checksums, nil
 }
 
 // checksum represents a line from a checksums file.
 type checksum struct {
 	checksum []byte // in hex
 	filename string
+	verified bool
 }
 
 // extractChecksums parses a checksumsFile and extracts checksums from it.
@@ -73,7 +71,7 @@ func extractChecksums(checksumsFile string) ([]checksum, error) {
 		if err != nil {
 			return nil, err
 		}
-		checksums = append(checksums, checksum{c, fields[1]})
+		checksums = append(checksums, checksum{c, fields[1], false})
 	}
 
 	return checksums, nil

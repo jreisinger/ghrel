@@ -82,11 +82,17 @@ func main() {
 
 		var verifiedFiles int
 		for _, c := range checksumFiles {
-			n, err := verifyChecksums(c)
+			checksums, err := verifyChecksums(c)
 			if err != nil {
 				log.Fatalf("%s: %v", c, err)
 			}
-			verifiedFiles += n
+			for _, c := range checksums {
+				if !c.verified {
+					log.Printf("%s not verified", c.filename)
+				} else {
+					verifiedFiles += 1
+				}
+			}
 		}
 		fmt.Printf("verified %d file(s)\n", verifiedFiles)
 	}
