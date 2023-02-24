@@ -15,15 +15,22 @@ var shellPattern = flag.String("p", "", "donwload only files matching shell `pat
 var onlyList = flag.Bool("l", false, "only list files that would be downloaded")
 
 func main() {
-	log.SetFlags(0) // no timestamp
-	log.SetPrefix(os.Args[0] + ": ")
+	flag.Usage = func() {
+		desc := "Download assets (files) of the latest release from a GitHub repository."
+		fmt.Fprintf(flag.CommandLine.Output(), "%s\n\n%s [flags] <owner>/<repo>\n", desc, os.Args[0])
+		flag.PrintDefaults()
+	}
 
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
-		log.Fatalf("usage: %s [flags] <owner>/<repo>", os.Args[0])
+		flag.Usage()
+		os.Exit(1)
 	}
 	repo := flag.Args()[0]
+
+	log.SetFlags(0) // no timestamp
+	log.SetPrefix(os.Args[0] + ": ")
 
 	urls, err := assets.GetDownloadUrls(repo)
 	if err != nil {

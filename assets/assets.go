@@ -21,7 +21,7 @@ func GetDownloadUrls(repo string) ([]string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("getting %s: %s", url, resp.Status)
+		return nil, fmt.Errorf("%s %s", url, resp.Status)
 	}
 
 	b, err := io.ReadAll(resp.Body)
