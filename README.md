@@ -1,6 +1,6 @@
 # ghrel
 
-`ghrel` concurrently downloads and verifies files (assets) of the latest release from a GitHub repository.
+`ghrel` concurrently downloads and verifies assets (files) of the latest release from a GitHub repository.
 
 ```sh
 # donwload all
