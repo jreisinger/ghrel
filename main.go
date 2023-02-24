@@ -11,8 +11,8 @@ import (
 	"github.com/jreisinger/ghrel/assets"
 )
 
-var shellPattern = flag.String("p", "", "donwload only files matching shell `pattern`")
-var onlyList = flag.Bool("l", false, "only list files that would be downloaded")
+var pattern = flag.String("p", "", "donwload only files matching shell `pattern`")
+var list = flag.Bool("l", false, "only list files that would be downloaded")
 
 func main() {
 	flag.Usage = func() {
@@ -57,8 +57,8 @@ func main() {
 
 			if isChecksumsFile(file) {
 				checksumFiles = append(checksumFiles, file)
-			} else if *shellPattern != "" {
-				matched, err := filepath.Match(*shellPattern, file)
+			} else if *pattern != "" {
+				matched, err := filepath.Match(*pattern, file)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -67,7 +67,7 @@ func main() {
 				}
 			}
 
-			if *onlyList {
+			if *list {
 				fmt.Println(file)
 				return
 			}
@@ -84,7 +84,7 @@ func main() {
 	}
 	wg.Wait()
 
-	if !*onlyList {
+	if !*list {
 		fmt.Printf("downloaded %d file(s)\n", count.files)
 
 		var verifiedFiles int

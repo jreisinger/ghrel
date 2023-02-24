@@ -23,8 +23,8 @@ func verifyChecksums(checksumsFile string) (checksums []checksum, err error) {
 	}
 
 	for i := range cs {
-		if *shellPattern != "" {
-			if matched, _ := filepath.Match(*shellPattern, cs[i].filename); !matched {
+		if *pattern != "" {
+			if matched, _ := filepath.Match(*pattern, cs[i].filename); !matched {
 				continue
 			}
 		}
@@ -110,8 +110,8 @@ var checksumFilePatterns = []checksumFilePattern{
 // isChecksumsFile tells whether filename looks like a file containing checksums.
 func isChecksumsFile(filename string) bool {
 	for _, c := range checksumFilePatterns {
-		if c.singleFile && *shellPattern != "" {
-			if matched, _ := filepath.Match(*shellPattern, filename); !matched {
+		if c.singleFile && *pattern != "" {
+			if matched, _ := filepath.Match(*pattern, filename); !matched {
 				continue
 			}
 		}
