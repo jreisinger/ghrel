@@ -56,7 +56,7 @@ func main() {
 		return
 	}
 
-	var checksumFiles []string
+	var checksumsFiles []string
 	var count struct {
 		mu    sync.Mutex
 		files int
@@ -75,7 +75,7 @@ func main() {
 			}
 
 			if isChecksumsFile(file) {
-				checksumFiles = append(checksumFiles, file)
+				checksumsFiles = append(checksumsFiles, file)
 			} else if *pattern != "" {
 				matched, err := filepath.Match(*pattern, file)
 				if err != nil {
@@ -98,10 +98,11 @@ func main() {
 	}
 	wg.Wait()
 
-	fmt.Printf("downloaded %d file(s)\n", count.files)
+	fmt.Printf("downloaded\t%d (+ %d checksums file)\n",
+		count.files-len(checksumsFiles), len(checksumsFiles))
 
 	var verifiedFiles int
-	for _, c := range checksumFiles {
+	for _, c := range checksumsFiles {
 		checksums, err := verifyChecksums(c)
 		if err != nil {
 			log.Fatalf("%s: %v", c, err)
@@ -114,5 +115,5 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("verified %d file(s)\n", verifiedFiles)
+	fmt.Printf("verified\t%d\n", verifiedFiles)
 }
