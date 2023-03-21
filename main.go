@@ -12,12 +12,12 @@ import (
 	"github.com/jreisinger/ghrel/asset"
 )
 
-var pattern = flag.String("p", "", "donwload only files matching shell `pattern`")
-var list = flag.Bool("l", false, "list assets (with info) that would be downloaded")
+var pattern = flag.String("p", "", "only assets matching shell `pattern`")
+var list = flag.Bool("l", false, "list assets")
 
 func main() {
 	flag.Usage = func() {
-		desc := "Download assets (files) of the latest release from a GitHub repository."
+		desc := "List or download assets (files) of the latest release from a GitHub repository."
 		fmt.Fprintf(flag.CommandLine.Output(), "%s\n\n%s [flags] <owner>/<repo>\n", desc, os.Args[0])
 		flag.PrintDefaults()
 	}
