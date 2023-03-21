@@ -1,17 +1,25 @@
-package assets
+package asset
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 var GitHubApiUrl = "https://api.github.com"
 
+type Asset struct {
+	BrowserDownloadUrl string    `json:"browser_download_url"`
+	UpdatedAt          time.Time `json:"updated_at"`
+	Size               int       `json:"size"`
+	DownloadCount      int       `json:"download_count"`
+}
+
 // GetDownloadUrls returns URLs for downloading assets from the latest repo
 // release. Repo is a GitHub repository in the form <user>/<repo>.
-func GetDownloadUrls(repo string) ([]string, error) {
+func GetDownloadUrls(repo string) ([]Asset, error) {
 	url := GitHubApiUrl + "/repos/" + repo + "/releases/latest"
 
 	resp, err := http.Get(url)
@@ -28,17 +36,9 @@ func GetDownloadUrls(repo string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := struct {
-		Assets []struct {
-			BrowserDownloadUrl string `json:"browser_download_url"`
-		}
-	}{}
+	r := struct{ Assets []Asset }{}
 	if err := json.Unmarshal(b, &r); err != nil {
 		return nil, err
 	}
-	var urls []string
-	for _, a := range r.Assets {
-		urls = append(urls, a.BrowserDownloadUrl)
-	}
-	return urls, nil
+	return r.Assets, nil
 }

@@ -7,12 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"text/tabwriter"
 
-	"github.com/jreisinger/ghrel/assets"
+	"github.com/jreisinger/ghrel/asset"
 )
 
 var pattern = flag.String("p", "", "donwload only files matching shell `pattern`")
-var list = flag.Bool("l", false, "only list files that would be downloaded")
+var list = flag.Bool("l", false, "list assets (with info) that would be downloaded")
 
 func main() {
 	flag.Usage = func() {
@@ -32,9 +33,27 @@ func main() {
 	log.SetFlags(0) // no timestamp
 	log.SetPrefix(os.Args[0] + ": ")
 
-	urls, err := assets.GetDownloadUrls(repo)
+	assets, err := asset.GetDownloadUrls(repo)
 	if err != nil {
 		log.Fatalf("get donwload URLs for release assets: %v", err)
+	}
+
+	if *list {
+		const format = "%v\t%v\t%v\t%v\n"
+		tw := new(tabwriter.Writer).Init(os.Stdout, 0, 8, 2, ' ', 0)
+		fmt.Fprintf(tw, format, "Asset", "Updated", "Size", "Download count")
+		fmt.Fprintf(tw, format, "-----", "-------", "----", "--------------")
+		for _, a := range assets {
+			fn, _ := fileName(a.BrowserDownloadUrl)
+			if *pattern != "" {
+				if matched, _ := filepath.Match(*pattern, fn); !matched {
+					continue
+				}
+			}
+			fmt.Fprintf(tw, format, fn, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
+		}
+		tw.Flush()
+		return
 	}
 
 	var checksumFiles []string
@@ -44,12 +63,12 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	for _, url := range urls {
+	for _, a := range assets {
 		wg.Add(1)
-		go func(url string) {
+		go func(asset asset.Asset) {
 			defer wg.Done()
 
-			file, err := fileName(url)
+			file, err := fileName(asset.BrowserDownloadUrl)
 			if err != nil {
 				log.Printf("extract filename from URL: %v", err)
 				return
@@ -67,40 +86,33 @@ func main() {
 				}
 			}
 
-			if *list {
-				fmt.Println(file)
-				return
-			}
-
-			if err := download(url, file); err != nil {
-				log.Printf("download %s: %v", url, err)
+			if err := download(asset.BrowserDownloadUrl, file); err != nil {
+				log.Printf("download %s: %v", asset.BrowserDownloadUrl, err)
 				return
 			}
 
 			count.mu.Lock()
 			count.files++
 			count.mu.Unlock()
-		}(url)
+		}(a)
 	}
 	wg.Wait()
 
-	if !*list {
-		fmt.Printf("downloaded %d file(s)\n", count.files)
+	fmt.Printf("downloaded %d file(s)\n", count.files)
 
-		var verifiedFiles int
-		for _, c := range checksumFiles {
-			checksums, err := verifyChecksums(c)
-			if err != nil {
-				log.Fatalf("%s: %v", c, err)
-			}
-			for _, c := range checksums {
-				if !c.verified {
-					log.Printf("%s not verified", c.filename)
-				} else {
-					verifiedFiles += 1
-				}
+	var verifiedFiles int
+	for _, c := range checksumFiles {
+		checksums, err := verifyChecksums(c)
+		if err != nil {
+			log.Fatalf("%s: %v", c, err)
+		}
+		for _, c := range checksums {
+			if !c.verified {
+				log.Printf("%s not verified", c.filename)
+			} else {
+				verifiedFiles += 1
 			}
 		}
-		fmt.Printf("verified %d file(s)\n", verifiedFiles)
 	}
+	fmt.Printf("verified %d file(s)\n", verifiedFiles)
 }
