@@ -17,7 +17,7 @@ var list = flag.Bool("l", false, "list assets")
 
 func main() {
 	flag.Usage = func() {
-		desc := "List or download assets (files) of the latest release from a GitHub repository."
+		desc := "Download or list assets (files) of the latest release from a GitHub repository."
 		fmt.Fprintf(flag.CommandLine.Output(), "%s\n\n%s [flags] <owner>/<repo>\n", desc, os.Args[0])
 		flag.PrintDefaults()
 	}
