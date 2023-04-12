@@ -1,33 +1,23 @@
 package checksum
 
 import (
-	"encoding/hex"
-	"fmt"
 	"io"
 	"os"
 	"testing"
 )
 
-// from `sha256sum testdata/file-to-checksum`
-const helloWorld = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-
-func TestVerify(t *testing.T) {
-	cs, err := hex.DecodeString(helloWorld)
-	if err != nil {
-		t.Errorf("decode hex string: %v", err)
-	}
-	checksum := Checksum{Checksum: cs, Name: "testdata/file-to-checksum"}
-	ok, err := checksum.Verify()
-	if err != nil {
-		t.Errorf("Verify failed: %v", err)
-	}
-	if !ok {
-		t.Errorf("Verify %v, want true", ok)
-	}
+var test = struct {
+	fileName      string
+	fileChecksum  string // calculated using sha256sum
+	checksumsFile string // contains checksum of file and file name
+}{
+	fileName:      "testdata/file-to-checksum",
+	fileChecksum:  "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+	checksumsFile: "testdata/checksum-file", // only one line here
 }
 
-func TestGetChecksums(t *testing.T) {
-	file, err := os.Open("testdata/checksum-file")
+func TestParseChecksumsLines(t *testing.T) {
+	file, err := os.Open(test.checksumsFile)
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,13 +28,10 @@ func TestGetChecksums(t *testing.T) {
 		t.Error(err)
 	}
 
-	cs, err := parseChecksumsLines(b)
-	if err != nil {
-		t.Errorf("get checksums: %v", err)
-	}
+	cs := parseChecksumLines(b)
 	for _, c := range cs {
-		got := fmt.Sprintf("%x", c.Checksum)
-		want := helloWorld
+		got := c.Checksum
+		want := test.fileChecksum
 		if got != want {
 			t.Errorf("wrong checksum: got %s, want %s", got, want)
 		}

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"text/tabwriter"
@@ -16,19 +14,20 @@ import (
 
 var GitHubApiUrl = "https://api.github.com" // changed during testing
 
-// Asset represents a GitHub API release asset.
+// Asset represents a GitHub API release asset with some calculated fields.
 type Asset struct {
 	BrowserDownloadUrl string    `json:"browser_download_url"`
 	Name               string    `json:"name"` // filename
-	IsChecksumsFile    bool      `json:"-"`
+	IsChecksumFile     bool      `json:"-"`
+	Checksum           string    `json:"-"` // in hex
 	UpdatedAt          time.Time `json:"updated_at"`
 	Size               int       `json:"size"`
 	DownloadCount      int       `json:"download_count"`
 }
 
-// Get queries GitHub API for assets of the latest repo release whose
-// (file)names match the shell pattern, if that is not empty. Pattern matching
-// does not apply to checksums files. Repo is a GitHub repository in the form
+// Get queries GitHub API for assets of the latest repo release whose name
+// matches the shell pattern, if the pattern is not empty. Pattern matching does
+// not apply to checksum files. Repo is a GitHub repository in the form
 // <user>/<repo>.
 func Get(repo string, pattern *string) ([]Asset, error) {
 	url := GitHubApiUrl + "/repos/" + repo + "/releases/latest"
@@ -55,8 +54,8 @@ func Get(repo string, pattern *string) ([]Asset, error) {
 	var assets []Asset
 
 	for _, a := range api.Assets {
-		if isChecksumsFile(a.Name) {
-			a.IsChecksumsFile = true
+		if isChecksumFile(a.Name) {
+			a.IsChecksumFile = true
 		} else if *pattern != "" {
 			if matched, _ := filepath.Match(*pattern, a.Name); !matched {
 				continue
@@ -68,24 +67,10 @@ func Get(repo string, pattern *string) ([]Asset, error) {
 	return assets, nil
 }
 
-// filename extracts filename from the Asset's BrowserDownloadUrl.
-func (a Asset) filename() (string, error) {
-	u, err := url.Parse(a.BrowserDownloadUrl)
-	if err != nil {
-		return "", err
-	}
-	_, file := path.Split(u.Path)
-	return file, nil
-}
-
-// Download downloads asset from BrowserDownloadUrl to a file who's name is
-// extracted from BrowserDownloadUrl. It creates or truncates the file.
-func (a Asset) Download() error {
-	file, err := a.filename()
-	if err != nil {
-		return err
-	}
-	f, err := os.Create(file)
+// Download downloads asset from a.BrowserDownloadUrl to a file named a.Name. It
+// creates or truncates the file.
+func Download(a Asset) error {
+	f, err := os.Create(a.Name)
 	if err != nil {
 		return err
 	}
@@ -106,19 +91,20 @@ func (a Asset) Download() error {
 func Print(assets []Asset) {
 	const format = "%v\t%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(os.Stdout, 0, 8, 2, ' ', 0)
-	fmt.Fprintf(tw, format, "Asset", "Checksums file", "Updated", "Size", "Download count")
-	fmt.Fprintf(tw, format, "-----", "--------------", "-------", "----", "--------------")
+	fmt.Fprintf(tw, format, "Asset", "Checksum file", "Updated", "Size", "Download count")
+	fmt.Fprintf(tw, format, "-----", "-------------", "-------", "----", "--------------")
 	for _, a := range assets {
-		fmt.Fprintf(tw, format, a.Name, a.IsChecksumsFile, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
+		fmt.Fprintf(tw, format, a.Name, a.IsChecksumFile, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
 	}
 	tw.Flush()
 }
 
-func Count(assets []Asset) (nFiles, nChecksumsFiles int) {
+// Count counts files and checksum files.
+func Count(assets []Asset) (nFiles, nChecksumFiles int) {
 	for _, a := range assets {
 		switch {
-		case a.IsChecksumsFile:
-			nChecksumsFiles++
+		case a.IsChecksumFile:
+			nChecksumFiles++
 		default:
 			nFiles++
 		}
@@ -126,15 +112,22 @@ func Count(assets []Asset) (nFiles, nChecksumsFiles int) {
 	return
 }
 
-var checksumsFilePatterns = []string{
-	`(?i)check.?sum`, // ghrel_0.3.1_checksums.txt
-	`\.sha256$`,      // brave-browser-nightly-1.47.27-linux-amd64.zip.sha256
-}
+// isChecksumFile tells whether asset looks like a file containing checksum(s).
+func isChecksumFile(filename string) bool {
+	checksumFiles := []string{
+		`(?i)check.?sum`, // ghrel_0.3.1_checksums.txt
+		`\.sha256$`,      // brave-browser-nightly-1.47.27-linux-amd64.zip.sha256
+	}
 
-// isChecksumsFile tells whether asset looks like a file containing checksum(s).
-func isChecksumsFile(filename string) bool {
-	for _, c := range checksumsFilePatterns {
-		if regexp.MustCompile(c).MatchString(filename) {
+	var checksumFilePatterns []*regexp.Regexp
+
+	for _, f := range checksumFiles {
+		re := regexp.MustCompile(f)
+		checksumFilePatterns = append(checksumFilePatterns, re)
+	}
+
+	for _, re := range checksumFilePatterns {
+		if re.MatchString(filename) {
 			return true
 		}
 	}

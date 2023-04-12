@@ -43,52 +43,67 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Download assets.
+	// Download and checksum assets.
 	var wg sync.WaitGroup
-	for _, a := range assets {
+	for i := range assets {
 		wg.Add(1)
-		go func(a asset.Asset) {
+		go func(i int) {
 			defer wg.Done()
-			if err := a.Download(); err != nil {
-				log.Printf("download %s: %v", a.BrowserDownloadUrl, err)
+
+			if err := asset.Download(assets[i]); err != nil {
+				log.Printf("download asset %v", err)
 				return
 			}
-		}(a)
+
+			sum, err := checksum.Sha256(assets[i].Name)
+			if err != nil {
+				log.Printf("checksum asset: %v", err)
+				return
+			}
+			assets[i].Checksum = sum
+		}(i)
 	}
 	wg.Wait()
 
 	// Print download statistics.
 	nFiles, nCheckumsFiles := asset.Count(assets)
-	fmt.Printf("downloaded\t%d (+ %d checksums files)\n", nFiles, nCheckumsFiles)
+	fmt.Printf("downloaded\t%d + %d checksum file(s)\n", nFiles, nCheckumsFiles)
 
-	checksums, err := checksum.Get(assets)
-	if err != nil {
-		log.Fatalf("get checksums: %v", err)
+	var pairs []checksum.Pair
+
+	// Get checksum/filename pairs from assets that are checksum files.
+	for _, a := range assets {
+		if !a.IsChecksumFile {
+			continue
+		}
+
+		cs, err := checksum.Parse(a.Name)
+		if err != nil {
+			log.Printf("get checksums from %s: %v", a.Name, err)
+			continue
+		}
+		pairs = append(pairs, cs...)
 	}
 
 	// Verify checksums.
 	var verifiedFiles int
 Asset:
 	for _, a := range assets {
-		if a.IsChecksumsFile {
+		if a.IsChecksumFile {
 			continue
 		}
-		for _, c := range checksums {
-			if a.Name == c.Name {
-				ok, err := c.Verify()
-				if err != nil {
-					log.Printf("verifying: %v", err)
-					continue
-				}
-				if ok {
+
+		for _, c := range pairs {
+			if a.Name == c.Filename {
+				if a.Checksum == c.Checksum {
 					verifiedFiles++
 				} else {
-					log.Printf("%s not verified (bad checksum)", a.Name)
+					log.Printf("%s not verified, has bad checksum %s", a.Name, c.Checksum)
 				}
 				continue Asset
 			}
 		}
-		log.Printf("%s not verified (no checksum)", a.Name)
+		log.Printf("%s not verified, has no checksum", a.Name)
 	}
 	fmt.Printf("verified\t%d\n", verifiedFiles)
 }
