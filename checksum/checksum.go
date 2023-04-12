@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -48,9 +49,25 @@ func Parse(checksumFile string) ([]Pair, error) {
 	}
 
 	cs := parseChecksumLines(b)
+	if len(cs) == 0 {
+		return checksums, fmt.Errorf("no checksums in %s", checksumFile)
+	}
+	for i := range cs {
+		// Since there is no filename field in the checksumFile get the
+		// filename from the checksumFile name.
+		if cs[i].Filename == "" {
+			cs[i].Filename = trimSuffix(checksumFile)
+		}
+	}
 	checksums = append(checksums, cs...)
 
 	return checksums, nil
+}
+
+// trimSuffix removes suffix (like .sha256) from the filename.
+func trimSuffix(filename string) string {
+	suffix := filepath.Ext(filename)
+	return strings.TrimSuffix(filename, suffix)
 }
 
 // parseChecksumLines parses bytes from a checksums file. The bytes look like:
@@ -60,13 +77,17 @@ func parseChecksumLines(b []byte) []Pair {
 	var checksums []Pair
 	for _, line := range strings.Split(string(b), "\n") {
 		fields := strings.Fields(line)
-		if len(fields) != 2 {
-			continue
+		switch len(fields) {
+		case 2:
+			checksums = append(checksums, Pair{
+				Checksum: fields[0],
+				Filename: fields[1],
+			})
+		case 1:
+			checksums = append(checksums, Pair{
+				Checksum: fields[0],
+			})
 		}
-		checksums = append(checksums, Pair{
-			Checksum: fields[0],
-			Filename: fields[1],
-		})
 	}
 	return checksums
 }
