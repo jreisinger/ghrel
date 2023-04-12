@@ -18,7 +18,7 @@ type Checksum struct {
 	Name     string // filename
 }
 
-// Get extracts checksums from the checksums files.
+// Get extracts checksums and corresponding filenames from the checksums files.
 func Get(assets []asset.Asset) ([]Checksum, error) {
 	var checksums []Checksum
 	for _, a := range assets {
@@ -68,8 +68,7 @@ func parseChecksumsLines(b []byte) ([]Checksum, error) {
 	return checksums, nil
 }
 
-// Verify computes SHA256 checksum of the filename from c and compares it to the
-// checksum from c.
+// Verify opens the filename from c, computes its SHA256 checksum and compares it to the checksum from c.
 func (c Checksum) Verify() (ok bool, err error) {
 	file, err := os.Open(c.Name)
 	if err != nil {
