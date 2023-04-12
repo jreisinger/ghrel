@@ -1,21 +1,27 @@
 {
     "assets": [
       {
+        "name": "checkip_0.38.5_darwin_amd64.tar.gz",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checkip_0.38.5_darwin_amd64.tar.gz"
       },
       {
+        "name": "checkip_0.38.5_linux_amd64.tar.gz",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checkip_0.38.5_linux_amd64.tar.gz"
       },
       {
+        "name": "checkip_0.38.5_linux_armv6.tar.gz",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checkip_0.38.5_linux_armv6.tar.gz"
       },
       {
+        "name": "checkip_0.38.5_windows_amd64.tar.gz",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checkip_0.38.5_windows_amd64.tar.gz"
       },
       {
+        "name": "heckip_0.38.5_windows_armv6.tar.gz",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checkip_0.38.5_windows_armv6.tar.gz"
       },
       {
+        "name": "checksums.txt",
         "browser_download_url": "https://github.com/jreisinger/checkip/releases/download/v0.38.5/checksums.txt"
       }
     ]

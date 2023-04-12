@@ -11,21 +11,93 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetDownloadUrls(t *testing.T) {
-	t.Run("given valid response, download URLs and no error is returned", func(t *testing.T) {
-		testUrl := startMockApiServer(t)
-		setMockApiUrl(t, testUrl)
-
-		urls, err := Get("jreisinger/checkip", getPointer(""))
+func TestGet(t *testing.T) {
+	testUrl := startMockApiServer(t)
+	setMockApiUrl(t, testUrl)
+	t.Run("get assets of jreisinger/checkip repo", func(t *testing.T) {
+		assets, err := Get("jreisinger/checkip", stringPointer(""))
 		require.NoError(t, err)
-		assert.Equal(t, 6, len(urls)) // number of release assets for jreisinger/checkip repo
+		assert.Equal(t, 6, len(assets))
 	})
+	t.Run("get assets of jreisinger/checkip repo with pattern", func(t *testing.T) {
+		assets, err := Get("jreisinger/checkip", stringPointer("*linux*"))
+		require.NoError(t, err)
+		assert.Equal(t, 3, len(assets))
+	})
+}
 
+func TestCount(t *testing.T) {
+	tests := []struct {
+		assets         []Asset
+		nFiles         int
+		nChecksumFiles int
+	}{
+		{
+			assets:         []Asset{},
+			nFiles:         0,
+			nChecksumFiles: 0,
+		},
+		{
+			assets: []Asset{
+				{IsChecksumFile: false},
+				{IsChecksumFile: false},
+			},
+			nFiles:         2,
+			nChecksumFiles: 0,
+		},
+		{
+			assets: []Asset{
+				{IsChecksumFile: false},
+				{IsChecksumFile: true},
+			},
+			nFiles:         1,
+			nChecksumFiles: 1,
+		},
+	}
+	for _, test := range tests {
+		nFiles, nChecksumFiles := Count(test.assets)
+		if nFiles != test.nFiles {
+			t.Errorf("nFiles = %d, want %d", nFiles, test.nFiles)
+		}
+		if nChecksumFiles != test.nChecksumFiles {
+			t.Errorf("nChecksumFiles = %d, want %d", nChecksumFiles, test.nChecksumFiles)
+		}
+	}
+}
+
+func TestIsChecksumFile(t *testing.T) {
+	tests := []struct {
+		filename       string
+		isChecksumFile bool
+	}{
+		{
+			filename:       "",
+			isChecksumFile: false,
+		},
+		{
+			filename:       "ghrel_0.6.2_linux_armv6.tar.gz",
+			isChecksumFile: false,
+		},
+		{
+			filename:       "checksums.txt",
+			isChecksumFile: true,
+		},
+		{
+			filename:       "brave-v1.50.114-darwin-arm64-symbols.zip.sha256",
+			isChecksumFile: true,
+		},
+	}
+	for _, test := range tests {
+		ok := isChecksumFile(test.filename)
+		if ok != test.isChecksumFile {
+			t.Errorf("isChecksumFile(%s) = %t, want %t", test.filename, ok, test.isChecksumFile)
+		}
+	}
 }
 
 // --- test helpers ---
 
-func getPointer(s string) *string {
+func stringPointer(s string) *string {
 	return &s
 }
 
