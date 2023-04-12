@@ -87,14 +87,17 @@ func Download(a Asset) error {
 	return nil
 }
 
-// Print prints table of assets.
-func Print(assets []Asset) {
-	const format = "%v\t%v\t%v\t%v\t%v\n"
+// List prints table of assets.
+func List(assets []Asset, showChecksumFiles bool) {
+	const format = "%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(os.Stdout, 0, 8, 2, ' ', 0)
-	fmt.Fprintf(tw, format, "Asset", "Checksum file", "Updated", "Size", "Download count")
-	fmt.Fprintf(tw, format, "-----", "-------------", "-------", "----", "--------------")
+	fmt.Fprintf(tw, format, "Asset", "Updated", "Size", "Download count")
+	fmt.Fprintf(tw, format, "-----", "-------", "----", "--------------")
 	for _, a := range assets {
-		fmt.Fprintf(tw, format, a.Name, a.IsChecksumFile, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
+		if a.IsChecksumFile && !showChecksumFiles {
+			continue
+		}
+		fmt.Fprintf(tw, format, a.Name, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
 	}
 	tw.Flush()
 }
