@@ -7,27 +7,49 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/jreisinger/ghrel/asset"
 )
 
-// Checksum represents a line from a checksums file.
+// Checksum represents a line from a checksums file. The line looks like:
+// ba47c83b6038dda089dd1410b9e97d1de7e4adea7620c856f9b74a782048e272  checkip_0.45.1_linux_amd64.tar.gz
 type Checksum struct {
 	Checksum []byte // in hex
-	Filename string
+	Name     string // filename
 }
 
-// Extract parses a checksumsFile and extracts checksums from it.
-func Extract(checksumsFile string) ([]Checksum, error) {
-	file, err := os.Open(checksumsFile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+// Get extracts checksums from the checksums files.
+func Get(assets []asset.Asset) ([]Checksum, error) {
+	var checksums []Checksum
+	for _, a := range assets {
+		if !a.IsChecksumsFile {
+			continue
+		}
 
-	b, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
+		file, err := os.Open(a.Name)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
 
+		b, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+
+		cs, err := parseChecksumsLines(b)
+		if err != nil {
+			return nil, err
+		}
+		checksums = append(checksums, cs...)
+	}
+	return checksums, nil
+}
+
+// parseChecksumsLines parses bytes from a checksums file that look like:
+// 712f37d14687e10ae0425bf7e5d0faf17c49f9476b8bb6a96f2a3f91b0436db2  checkip_0.45.1_linux_armv6.tar.gz
+// ba47c83b6038dda089dd1410b9e97d1de7e4adea7620c856f9b74a782048e272  checkip_0.45.1_linux_amd64.tar.gz
+func parseChecksumsLines(b []byte) ([]Checksum, error) {
 	var checksums []Checksum
 	for _, line := range strings.Split(string(b), "\n") {
 		fields := strings.Fields(line)
@@ -40,7 +62,7 @@ func Extract(checksumsFile string) ([]Checksum, error) {
 		}
 		checksums = append(checksums, Checksum{
 			Checksum: c,
-			Filename: fields[1],
+			Name:     fields[1],
 		})
 	}
 	return checksums, nil
@@ -49,7 +71,7 @@ func Extract(checksumsFile string) ([]Checksum, error) {
 // Verify computes SHA256 checksum of the filename from c and compares it to the
 // checksum from c.
 func (c Checksum) Verify() (ok bool, err error) {
-	file, err := os.Open(c.Filename)
+	file, err := os.Open(c.Name)
 	if err != nil {
 		return false, err
 	}

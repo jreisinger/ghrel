@@ -2,15 +2,21 @@ package checksums
 
 import (
 	"encoding/hex"
+	"fmt"
+	"io"
+	"os"
 	"testing"
 )
 
+// from `sha256sum testdata/file-to-checksum`
+const helloWorld = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+
 func TestVerify(t *testing.T) {
-	cs, err := hex.DecodeString("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9")
+	cs, err := hex.DecodeString(helloWorld)
 	if err != nil {
 		t.Errorf("decode hex string: %v", err)
 	}
-	checksum := Checksum{Checksum: cs, Filename: "testdata/file-to-checksum"}
+	checksum := Checksum{Checksum: cs, Name: "testdata/file-to-checksum"}
 	ok, err := checksum.Verify()
 	if err != nil {
 		t.Errorf("Verify failed: %v", err)
@@ -20,28 +26,27 @@ func TestVerify(t *testing.T) {
 	}
 }
 
-func TestExtractAndVerify(t *testing.T) {
-	checksums, err := Extract("testdata/checksum-ok.txt")
+func TestGetChecksums(t *testing.T) {
+	file, err := os.Open("testdata/checksum-file")
 	if err != nil {
-		t.Errorf("Extract failed: %v", err)
+		t.Error(err)
 	}
-	ok, err := checksums[0].Verify()
+	defer file.Close()
+
+	b, err := io.ReadAll(file)
 	if err != nil {
-		t.Errorf("Verify failed: %v", err)
-	}
-	if !ok {
-		t.Error("testdata/checksum-ok.txt not verified")
+		t.Error(err)
 	}
 
-	checksums, err = Extract("testdata/checksum-notok.txt")
+	cs, err := parseChecksumsLines(b)
 	if err != nil {
-		t.Errorf("Extract failed: %v", err)
+		t.Errorf("get checksums: %v", err)
 	}
-	ok, err = checksums[0].Verify()
-	if err != nil {
-		t.Errorf("Verify failed: %v", err)
-	}
-	if ok {
-		t.Error("testdata/checksum-notok.txt verified")
+	for _, c := range cs {
+		got := fmt.Sprintf("%x", c.Checksum)
+		want := helloWorld
+		if got != want {
+			t.Errorf("wrong checksum: got %s, want %s", got, want)
+		}
 	}
 }

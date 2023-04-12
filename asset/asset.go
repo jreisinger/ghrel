@@ -26,8 +26,9 @@ type Asset struct {
 	DownloadCount      int       `json:"download_count"`
 }
 
-// Get returns assets from the latest repo release whose (file)names match the
-// shell pattern, if that is not empty. Repo is a GitHub repository in the form
+// Get queries GitHub API for assets of the latest repo release whose
+// (file)names match the shell pattern, if that is not empty. Pattern matching
+// does not apply to checksums files. Repo is a GitHub repository in the form
 // <user>/<repo>.
 func Get(repo string, pattern *string) ([]Asset, error) {
 	url := GitHubApiUrl + "/repos/" + repo + "/releases/latest"
@@ -111,6 +112,18 @@ func Print(assets []Asset) {
 		fmt.Fprintf(tw, format, a.Name, a.IsChecksumsFile, a.UpdatedAt.Format("2006-01-02"), a.Size, a.DownloadCount)
 	}
 	tw.Flush()
+}
+
+func Count(assets []Asset) (nFiles, nChecksumsFiles int) {
+	for _, a := range assets {
+		switch {
+		case a.IsChecksumsFile:
+			nChecksumsFiles++
+		default:
+			nFiles++
+		}
+	}
+	return
 }
 
 var checksumsFilePatterns = []string{
