@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/jreisinger/ghrel/asset"
-	"github.com/jreisinger/ghrel/checksums"
+	"github.com/jreisinger/ghrel/checksum"
 )
 
 var l = flag.Bool("l", false, "just list assets")
@@ -61,7 +61,7 @@ func main() {
 	nFiles, nCheckumsFiles := asset.Count(assets)
 	fmt.Printf("downloaded\t%d (+ %d checksums files)\n", nFiles, nCheckumsFiles)
 
-	cs, err := checksums.Get(assets)
+	checksums, err := checksum.Get(assets)
 	if err != nil {
 		log.Fatalf("get checksums: %v", err)
 	}
@@ -73,7 +73,7 @@ Asset:
 		if a.IsChecksumsFile {
 			continue
 		}
-		for _, c := range cs {
+		for _, c := range checksums {
 			if a.Name == c.Name {
 				ok, err := c.Verify()
 				if err != nil {
