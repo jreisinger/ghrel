@@ -3,11 +3,11 @@
 `ghrel` downloads and verifies, or just lists, assets (files) of the latest release from a GitHub repository.
 
 ```sh
-> ghrel -p '*linux*' jreisinger/ghrel
+$ ghrel -p '*linux*' jreisinger/ghrel
 downloaded	4 + 1 checksum file(s)
 verified	4
 
-> ghrel -l -p '*linux*' jreisinger/ghrel
+$ ghrel -l -p '*linux*' jreisinger/ghrel
 Asset                           Updated     Size     Download count
 -----                           -------     ----     --------------
 ghrel_0.7.1_linux_386.tar.gz    2023-04-12  2029844  2
