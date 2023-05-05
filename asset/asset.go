@@ -87,8 +87,18 @@ func Download(a Asset) error {
 	return nil
 }
 
-// List prints table of assets.
+// List prints a list of assets.
 func List(assets []Asset, showChecksumFiles bool) {
+	for _, a := range assets {
+		if a.IsChecksumFile && !showChecksumFiles {
+			continue
+		}
+		fmt.Println(a.Name)
+	}
+}
+
+// ListTable prints a list of assets in a table format with additional info.
+func ListTable(assets []Asset, showChecksumFiles bool) {
 	const format = "%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(os.Stdout, 0, 8, 2, ' ', 0)
 	fmt.Fprintf(tw, format, "Asset", "Updated", "Size", "Download count")

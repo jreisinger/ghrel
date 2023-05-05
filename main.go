@@ -11,9 +11,12 @@ import (
 	"github.com/jreisinger/ghrel/checksum"
 )
 
-var c = flag.Bool("c", false, "keep (or list) checksum files")
-var l = flag.Bool("l", false, "only list assets")
-var p = flag.String("p", "", "assets matching shell `pattern` (doesn't apply to checksum files)")
+var (
+	c = flag.Bool("c", false, "keep or list (-l) checksum files")
+	l = flag.Bool("l", false, "just list assets, don't download them")
+	p = flag.String("p", "", "assets matching shell `pattern` (doesn't apply to checksum files)")
+	v = flag.Bool("v", false, "be verbose")
+)
 
 func main() {
 	flag.Usage = func() {
@@ -40,7 +43,11 @@ func main() {
 	}
 
 	if *l {
-		asset.List(assets, *c)
+		if *v {
+			asset.ListTable(assets, *c)
+		} else {
+			asset.List(assets, *c)
+		}
 		os.Exit(0)
 	}
 
@@ -71,13 +78,19 @@ func main() {
 		if !*c {
 			if err := removeChecksumFiles(assets); err != nil {
 				log.Print(err)
+				return
+			}
+			if *v {
+				fmt.Println("removed checksum file(s)")
 			}
 		}
 	}()
 
 	// Print download statistics.
-	nFiles, nCheckumsFiles := asset.Count(assets)
-	fmt.Printf("downloaded\t%d + %d checksum file(s)\n", nFiles, nCheckumsFiles)
+	if *v {
+		nFiles, nCheckumsFiles := asset.Count(assets)
+		fmt.Printf("downloaded\t%d + %d checksum file(s)\n", nFiles, nCheckumsFiles)
+	}
 
 	var pairs []checksum.Pair
 
@@ -115,7 +128,9 @@ Asset:
 		}
 		log.Printf("%s not verified, has no checksum", a.Name)
 	}
-	fmt.Printf("verified\t%d\n", verifiedFiles)
+	if *v {
+		fmt.Printf("verified\t%d\n", verifiedFiles)
+	}
 }
 
 func removeChecksumFiles(assets []asset.Asset) error {
