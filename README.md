@@ -11,7 +11,7 @@ ghrel [flags] <owner>/<repo>
   -v	be verbose
 ```
 
-To use ghrel, download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture or if you have [Go installed](https://go.dev/doc/install):
+To use ghrel download a [binary](https://github.com/jreisinger/ghrel/releases) for your system and architecture. Or, if you have [Go installed](https://go.dev/doc/install):
 
 ```
 $ go install github.com/jreisinger/ghrel@latest

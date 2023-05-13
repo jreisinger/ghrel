@@ -87,15 +87,8 @@ func Download(a Asset) error {
 	return nil
 }
 
-// List prints a list of assets.
-func List(assets []Asset) {
-	for _, a := range assets {
-		fmt.Println(a.Name)
-	}
-}
-
-// ListTable prints a list of assets in a table format with additional info.
-func ListTable(assets []Asset) {
+// Table prints a table of assets with additional info.
+func Table(assets []Asset) {
 	const format = "%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(os.Stdout, 0, 8, 2, ' ', 0)
 	fmt.Fprintf(tw, format, "Asset", "Updated", "Size", "Download count")

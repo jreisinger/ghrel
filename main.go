@@ -43,9 +43,11 @@ func main() {
 
 	if *l {
 		if *v {
-			asset.ListTable(assets)
+			asset.Table(assets)
 		} else {
-			asset.List(assets)
+			for _, a := range assets {
+				fmt.Println(a.Name)
+			}
 		}
 		os.Exit(0)
 	}
@@ -117,15 +119,4 @@ Asset:
 	if *v {
 		fmt.Printf("verified\t%d\n", verifiedFiles)
 	}
-}
-
-func removeChecksumFiles(assets []asset.Asset) error {
-	for _, a := range assets {
-		if a.IsChecksumFile {
-			if err := os.Remove(a.Name); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
