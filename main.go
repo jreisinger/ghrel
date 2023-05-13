@@ -12,7 +12,6 @@ import (
 )
 
 var (
-	c = flag.Bool("c", false, "keep or list (-l) checksum files")
 	l = flag.Bool("l", false, "just list assets, don't download them")
 	p = flag.String("p", "", "assets matching shell `pattern` (doesn't apply to checksum files)")
 	v = flag.Bool("v", false, "be verbose")
@@ -44,9 +43,9 @@ func main() {
 
 	if *l {
 		if *v {
-			asset.ListTable(assets, *c)
+			asset.ListTable(assets)
 		} else {
-			asset.List(assets, *c)
+			asset.List(assets)
 		}
 		os.Exit(0)
 	}
@@ -72,19 +71,6 @@ func main() {
 		}(i)
 	}
 	wg.Wait()
-
-	// Remove checksum files.
-	defer func() {
-		if !*c {
-			if err := removeChecksumFiles(assets); err != nil {
-				log.Print(err)
-				return
-			}
-			if *v {
-				fmt.Println("removed checksum file(s)")
-			}
-		}
-	}()
 
 	// Print download statistics.
 	if *v {
