@@ -1,7 +1,7 @@
 # ghrel
 
 ```
-$ ghrel
+$ ghrel -h
 Download and verify assets (files) of the latest release from a GitHub repository.
 
 ghrel [flags] <owner>/<repo>
